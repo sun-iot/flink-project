@@ -71,8 +71,11 @@ case class ItemViewCount(itemId: Long, windowEnd: Long, count: Long)
 // 进行预聚合操作，来一个 +1
 class CountAgg() extends AggregateFunction[UserBeahvior, Long, Long] {
   override def createAccumulator(): Long = 0L
+
   override def add(in: UserBeahvior, acc: Long): Long = acc + 1
+
   override def getResult(acc: Long): Long = acc
+
   override def merge(acc: Long, acc1: Long): Long = acc + acc1
 }
 
@@ -111,7 +114,7 @@ class ProcessTopNHotItems(i: Int) extends KeyedProcessFunction[Long, ItemViewCou
     var items: ListBuffer[ItemViewCount] = ListBuffer()
     import scala.collection.JavaConversions._
     for (item <- itemState.get()) {
-      items+=item
+      items += item
     }
     // 清空
     itemState.clear()
@@ -120,7 +123,7 @@ class ProcessTopNHotItems(i: Int) extends KeyedProcessFunction[Long, ItemViewCou
     val sortedItem: ListBuffer[ItemViewCount] = items.sortBy(_.count)(Ordering.Long.reverse).take(i)
     val builder = new StringBuilder
     // 做清空操作
-    //builder.delete(0, builder.length)
+    builder.delete(0, builder.length)
 
     builder.append("====================================\n")
     builder.append("时间: ").append(new Timestamp(timestamp - 100)).append("\n")
@@ -134,7 +137,7 @@ class ProcessTopNHotItems(i: Int) extends KeyedProcessFunction[Long, ItemViewCou
     }
     builder.append("====================================\n")
     // 睡眠一下
-    Thread.sleep(100)
+    Thread.sleep(1000)
     out.collect(builder.toString())
   }
 
