@@ -40,7 +40,6 @@ object HotItems {
         UserBeahvior(strs(0).trim.toLong, strs(1).trim.toLong, strs(2).trim.toInt, strs(3).trim, strs(4).trim.toLong)
       }
     }
-    //  userBehaviorDS.print()
     // 给数据流打上时间戳
     val timeTampDS: DataStream[UserBeahvior] = userBehaviorDS.assignAscendingTimestamps(_.timeTamp * 1000)
     // 过滤出行为是 “pv”的数据
@@ -50,11 +49,10 @@ object HotItems {
     //
     // keyByDS.window(SlidingEventTimeWindows.of(Time.minutes(60) , Time.milliseconds(5)))
     // 开时间窗口,滑动窗口,60分钟的统计，即窗口大小 ， 5分钟的滑动距离，
-    val windowDS: WindowedStream[UserBeahvior, Long, TimeWindow] = keyByDS.timeWindow(Time.minutes(60), Time.milliseconds(5))
+    val windowDS: WindowedStream[UserBeahvior, Long, TimeWindow] = keyByDS.timeWindow(Time.minutes(60), Time.minutes(5))
 
     // 聚合操作 ， 有自己操作
     val aggregateDS: DataStream[ItemViewCount] = windowDS.aggregate(new CountAgg(), new WindowResultFunction())
-    aggregateDS.print()
     // 按照 windowEnd 分组
     val windowEndKeyByDS: KeyedStream[ItemViewCount, Long] = aggregateDS.keyBy(_.windowEnd)
     val processDS: DataStream[String] = windowEndKeyByDS.process(new ProcessTopNHotItems(5))
